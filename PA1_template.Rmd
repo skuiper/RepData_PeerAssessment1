@@ -7,19 +7,100 @@ output:
 
 
 ## Loading and preprocessing the data
+Install the needed packages and after ensuring the data is in our working directory, we read the data and verify the dimensions. 
+```{r echo = TRUE, message = FALSE}
+library(ggplot2)
+library(dplyr)
+data1 <- read.csv(unzip("activity.zip"))
+dim(data1)
 
-
+```
 
 ## What is mean total number of steps taken per day?
 
+```{r echo = TRUE, message = FALSE, warning = FALSE}
+# summarize the total steps for each date
+data2= group_by(data1, date)
+# if total=sum(steps, na.rm = TRUE), total will be 0 instead of NA
+data2 = summarize(data2, total=sum(steps))
 
+# make a histogram
+ggplot(data=data2) + geom_histogram(mapping = aes(total))+
+  labs(title="Histogram of total steps each day",  x = "Total Steps")
+
+# calculate the mean and median total daily steps
+mean(data2$total, na.rm=TRUE)
+median(data2$total, na.rm=TRUE)
+```
 
 ## What is the average daily activity pattern?
 
+```{r echo = TRUE, message = FALSE}
+# calculate the mean for each interval
+data3= group_by(data1, interval)
+data3 = summarize(data3, meansteps=mean(steps, na.rm=TRUE))
 
+# make a time series plot
+ggplot(data3) + geom_line(aes(interval,meansteps), type = "l") +
+  labs(title = "Average Daily Activity Pattern", x = "Interval Representing Time of Day", y = "Average Steps")
+```
+
+
+```{r echo = TRUE, message = FALSE, warning = FALSE}
+# Find the interval with the maximum meansteps value in data3 (grouped by intervals)
+data3[which.max(data3$meansteps),]
+
+```
 
 ## Imputing missing values
+Note that there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
 
+```{r echo = TRUE, message = FALSE, warning = FALSE}
+ missing.steps <- sum(is.na(data1$steps))
+    paste("The number of missing values in the dataset is",missing.steps)
+```
+We replace any NAs in steps with the mean for the corresponding interval.
+```{r echo = TRUE, message = FALSE, warning = FALSE}
+# add the mean interval values as a new column to the original data
+data4 = left_join(x = data1, y = data3, by = "interval")
+dim(data4)
+# replace the mean interval value if steps==NA
+data4$steps[is.na(data4$steps)] <- data4$meansteps[is.na(data4$steps)]
+```
 
+Now the steps column in data4 has the missing values filled in.
+
+```{r echo = TRUE, message = FALSE, warning = FALSE}
+# summarize the total steps for each date
+data5= group_by(data4, date)
+# if total=sum(steps, na.rm = TRUE), total will be 0 instead of NA
+data5 = summarize(data5, total=sum(steps))
+
+# make a histogram
+ggplot(data=data5) + geom_histogram(mapping = aes(total))+
+  labs(title="Histogram of total steps each day with imputed missing values",  x = "Total Steps")
+
+# calculate the mean and median total daily steps
+mean(data5$total, na.rm=TRUE)
+median(data5$total, na.rm=TRUE)
+```
+The mean remained the same, but there is a modest change in the median value.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+```{r echo = TRUE, message = FALSE, warning = FALSE}
+# Create a day column and then a weekend column
+data4$day = weekdays(as.Date(data4$date))
+data4$weekend = ifelse(data4$day=="Saturday"|data4$day=="Sunday","Weekend","Weekday")
+
+# calculate the mean for each interval, for both weekends and weekdays
+data6= group_by(data4, weekend, interval)
+data6 = summarize(data6, meansteps=mean(steps, na.rm=TRUE))
+
+# make a time series plot
+ggplot(data6) + geom_line(aes(interval,meansteps), type = "l") +
+  facet_grid(weekend ~ .) +
+  labs(title = "Average Daily Activity Pattern", x = "Interval Representing Time of Day", y = "Average Steps")
+
+```
+
