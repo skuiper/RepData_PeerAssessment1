@@ -16,6 +16,7 @@ dim(data1)
 
 ```
 
+
 ## What is mean total number of steps taken per day?
 
 ```{r echo = TRUE, message = FALSE, warning = FALSE}
@@ -32,10 +33,11 @@ ggplot(data=data2) + geom_histogram(mapping = aes(total))+
 mean(data2$total, na.rm=TRUE)
 median(data2$total, na.rm=TRUE)
 ```
+The mean is 10766.19 and the median is 10765.
 
 ## What is the average daily activity pattern?
 
-```{r echo = TRUE, message = FALSE}
+```{r echo = TRUE, message = FALSE, warning=FALSE}
 # calculate the mean for each interval
 data3= group_by(data1, interval)
 data3 = summarize(data3, meansteps=mean(steps, na.rm=TRUE))
@@ -51,6 +53,7 @@ ggplot(data3) + geom_line(aes(interval,meansteps), type = "l") +
 data3[which.max(data3$meansteps),]
 
 ```
+Interval 835 has the highest meansteps value.
 
 ## Imputing missing values
 Note that there are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data.
@@ -59,6 +62,8 @@ Note that there are a number of days/intervals where there are missing values (c
  missing.steps <- sum(is.na(data1$steps))
     paste("The number of missing values in the dataset is",missing.steps)
 ```
+The number of missing values in the dataset is 2304.
+
 We replace any NAs in steps with the mean for the corresponding interval.
 ```{r echo = TRUE, message = FALSE, warning = FALSE}
 # add the mean interval values as a new column to the original data
@@ -84,7 +89,7 @@ ggplot(data=data5) + geom_histogram(mapping = aes(total))+
 mean(data5$total, na.rm=TRUE)
 median(data5$total, na.rm=TRUE)
 ```
-The mean remained the same, but there is a modest change in the median value.
+The mean is 10766.19 and the median is now 10766.19.The mean remained the same, but there is a modest change in the median value.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
